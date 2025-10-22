@@ -1,17 +1,13 @@
 {
   "files": {
-    "main.css": "/Gratitude-diary/static/css/main.7f973576.css",
-    "main.js": "/Gratitude-diary/static/js/main.8b28793e.js",
-    "static/js/977.08e14a3e.chunk.js": "/Gratitude-diary/static/js/977.08e14a3e.chunk.js",
-    "static/js/455.ab2e1727.chunk.js": "/Gratitude-diary/static/js/455.ab2e1727.chunk.js",
+    "main.css": "/Gratitude-diary/static/css/main.86beb3bd.css",
+    "main.js": "/Gratitude-diary/static/js/main.8fcacead.js",
     "index.html": "/Gratitude-diary/index.html",
-    "main.7f973576.css.map": "/Gratitude-diary/static/css/main.7f973576.css.map",
-    "main.8b28793e.js.map": "/Gratitude-diary/static/js/main.8b28793e.js.map",
-    "977.08e14a3e.chunk.js.map": "/Gratitude-diary/static/js/977.08e14a3e.chunk.js.map",
-    "455.ab2e1727.chunk.js.map": "/Gratitude-diary/static/js/455.ab2e1727.chunk.js.map"
+    "main.86beb3bd.css.map": "/Gratitude-diary/static/css/main.86beb3bd.css.map",
+    "main.8fcacead.js.map": "/Gratitude-diary/static/js/main.8fcacead.js.map"
   },
   "entrypoints": [
-    "static/css/main.7f973576.css",
-    "static/js/main.8b28793e.js"
+    "static/css/main.86beb3bd.css",
+    "static/js/main.8fcacead.js"
   ]
 }

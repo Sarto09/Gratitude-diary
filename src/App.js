@@ -1,149 +1,147 @@
-import React, { useEffect, useState } from 'react';
-import GratitudeDiary from './components/GratitudeDiary';
-import EntryHistory from './components/EntryHistory';
-import QuoteBox from './components/QuoteBox';
+import React, { useState, useEffect } from "react";
+import { Heart, Lightbulb, Star, Award } from "lucide-react";
 
-// A small collection of motivational quotes. Each quote can include an author.
-const QUOTES = [
-  { text: 'Ogni giorno porta nuovi inizi, nuova speranza e nuove opportunità.', author: 'Anonimo' },
-  { text: 'La gratitudine trasforma ciò che abbiamo in abbastanza.', author: 'Aesop' },
-  { text: 'Ricorda che la felicità è un modo di viaggiare, non una destinazione.', author: 'Roy L. Goodman' },
-  { text: 'Apprezza le piccole cose, perché un giorno potresti guardare indietro e scoprire che erano grandi.', author: 'Robert Brault' },
-  { text: 'Ogni momento è un nuovo inizio.', author: 'T.S. Eliot' },
-];
+function App() {
+  const [answers, setAnswers] = useState(["", "", "", ""]);
 
-/**
- * Main application component
- *
- * Handles onboarding (asking for the user's name and date), renders the
- * GratitudeDiary component, maintains the list of past entries and displays
- * an EntryHistory with filtering and PDF export capabilities.
- */
-export default function App() {
-  const [name, setName] = useState('');
-  const [date, setDate] = useState('');
-  const [entries, setEntries] = useState([]);
-  const [filterYear, setFilterYear] = useState('');
-  const [filterMonth, setFilterMonth] = useState('');
-  const [quote, setQuote] = useState(null);
-
-  // Local state for input fields
-  const [nameInput, setNameInput] = useState('');
-  const [dateInput, setDateInput] = useState(new Date().toISOString().split('T')[0]);
-
-  // Load persisted data on mount
   useEffect(() => {
-    const storedName = localStorage.getItem('gratitude-name');
-    if (storedName) setName(storedName);
-    const storedEntries = localStorage.getItem('gratitude-entries');
-    if (storedEntries) setEntries(JSON.parse(storedEntries));
+    const saved = JSON.parse(localStorage.getItem("gratitudeAnswers")) || ["", "", "", ""];
+    setAnswers(saved);
   }, []);
 
-  // Choose a random quote based on date to ensure a different one each day
   useEffect(() => {
-    if (!quote) {
-      const index = new Date().getDate() % QUOTES.length;
-      setQuote(QUOTES[index]);
-    }
-  }, [quote]);
+    localStorage.setItem("gratitudeAnswers", JSON.stringify(answers));
+  }, [answers]);
 
-  // Persist name and entries to localStorage when they change
-  useEffect(() => {
-    if (name) {
-      localStorage.setItem('gratitude-name', name);
-    }
-  }, [name]);
-  useEffect(() => {
-    if (entries) {
-      localStorage.setItem('gratitude-entries', JSON.stringify(entries));
-    }
-  }, [entries]);
+  const questions = [
+    {
+      id: 1,
+      icon: <Heart className="text-rose-500 w-8 h-8" />,
+      color: "bg-rose-50",
+      text: "Ripensando alla giornata di oggi, fai un piccolo elenco delle cose per cui essere grato.",
+      placeholder: "Scrivi qui le cose di cui sei grato...",
+    },
+    {
+      id: 2,
+      icon: <Lightbulb className="text-amber-500 w-8 h-8" />,
+      color: "bg-amber-50",
+      text: "Ripensando alla giornata di oggi, fai un elenco delle cose che hai imparato.",
+      placeholder: "Scrivi qui le lezioni o scoperte della giornata...",
+    },
+    {
+      id: 3,
+      icon: <Star className="text-indigo-500 w-8 h-8" />,
+      color: "bg-indigo-50",
+      text: "Fai un elenco delle cose belle che riconosci in te stesso.",
+      placeholder: "Scrivi qui i tuoi punti di forza o qualità positive...",
+    },
+    {
+      id: 4,
+      icon: <Award className="text-yellow-500 w-8 h-8" />,
+      color: "bg-yellow-50",
+      text: "Fai un elenco delle cose di cui sei orgoglioso oggi.",
+      placeholder: "Scrivi qui i tuoi successi o traguardi personali...",
+    },
+  ];
 
-  // Handler when a new diary entry is completed
-  const handleComplete = (entry) => {
-    setEntries([...entries, entry]);
-  };
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-yellow-50 to-yellow-100 flex flex-col items-center px-4 py-8">
+      {/* HEADER */}
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Diario di Leo 🌞</h1>
+        <p className="text-gray-600 text-base sm:text-lg">
+          Rispondi alle domande riflettendo sulla tua giornata.
+        </p>
+      </div>
 
-  // Filter entries by year and month
-  const filteredEntries = entries
-    .filter((entry) => {
-      if (filterYear && entry.date.split('-')[0] !== filterYear) return false;
-      if (filterMonth && entry.date.split('-')[1] !== filterMonth) return false;
-      return true;
-    })
-    .sort((a, b) => (a.date < b.date ? 1 : -1));
-
-  // Determine which view to show based on whether name and date are set
-  if (!name) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-primary-light">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-800 mb-4">Benvenuto!</h1>
-          <p className="text-gray-600 mb-4">Per iniziare, inserisci il tuo nome:</p>
+      {/* BLOCCO DATA CENTRATO */}
+      <div className="flex justify-center w-full mb-10">
+        <div className="w-full max-w-sm bg-white rounded-2xl shadow-md p-6 flex flex-col items-center">
+          <h2 className="text-lg font-semibold text-gray-700 mb-3 text-center">
+            Seleziona la data del tuo diario
+          </h2>
           <input
             type="text"
-            placeholder="Il tuo nome"
-            value={nameInput}
-            onChange={(e) => setNameInput(e.target.value)}
-            className="w-full mb-4 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-dark"
+            readOnly
+            value={new Date().toLocaleDateString("it-IT", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })}
+            className="w-full max-w-xs text-center border border-gray-300 rounded-lg py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-400 mb-4"
           />
           <button
-            onClick={() => {
-              if (nameInput.trim()) setName(nameInput.trim());
-            }}
-            className="w-full py-3 bg-primary-dark text-white rounded-md font-semibold hover:bg-primary"
-          >
-            Continua
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!date) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-primary-light">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Ciao {name}!</h2>
-          <p className="text-gray-600 mb-4">Seleziona la data per il tuo diario:</p>
-          <input
-            type="date"
-            value={dateInput}
-            onChange={(e) => setDateInput(e.target.value)}
-            className="w-full mb-4 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-dark"
-          />
-          <button
-            onClick={() => {
-              if (dateInput) setDate(dateInput);
-            }}
-            className="w-full py-3 bg-primary-dark text-white rounded-md font-semibold hover:bg-primary"
+            onClick={() =>
+              document.getElementById("questions")?.scrollIntoView({ behavior: "smooth" })
+            }
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white text-lg font-semibold py-2 rounded-lg transition"
           >
             Inizia
           </button>
         </div>
       </div>
-    );
-  }
 
-  return (
-    <div className="min-h-screen bg-primary-light">
-      {/* Quote at top after selecting date */}
-      <div className="max-w-4xl mx-auto p-6">
-        {quote && <QuoteBox quote={quote.text} author={quote.author} />}
-        {/* Gratitude diary for the selected date */}
-        <GratitudeDiary name={name} date={date} onComplete={handleComplete} />
-        {/* Show history of entries only if there are any */}
-        {entries.length > 0 && (
-          <EntryHistory
-            entries={filteredEntries}
-            onFilterChange={(year, month) => {
-              // update filters. If year is null, update only month; vice versa.
-              if (year !== null) setFilterYear(year);
-              if (month !== null) setFilterMonth(month);
-            }}
-          />
+      {/* SEZIONE DOMANDE */}
+      <div id="questions" className="w-full max-w-md flex flex-col gap-8">
+        <p className="text-center text-sm text-gray-500 mb-2 italic">
+          Scorri per passare alla domanda successiva ↓
+        </p>
+
+        {questions.map((q, index) => (
+          <div
+            key={q.id}
+            className={`w-full ${q.color} border border-gray-200 rounded-2xl p-5 shadow-sm transition`}
+          >
+            <div className="flex flex-col items-center text-center mb-4">
+              <div className="mb-2">{q.icon}</div>
+              <h3 className="text-gray-800 text-base font-semibold leading-snug max-w-xs">
+                {q.text}
+              </h3>
+            </div>
+            <textarea
+              value={answers[index]}
+              onChange={(e) => {
+                const newAnswers = [...answers];
+                newAnswers[index] = e.target.value;
+                setAnswers(newAnswers);
+              }}
+              placeholder={q.placeholder}
+              className="w-full h-28 p-3 border border-gray-300 rounded-xl text-gray-700 text-base resize-none shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            ></textarea>
+          </div>
+        ))}
+      </div>
+
+      {/* SEZIONE RIEPILOGO */}
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-md p-6 mt-12 mb-10">
+        <h2 className="text-xl font-bold text-gray-800 text-center mb-4">
+          Le tue riflessioni salvate
+        </h2>
+        {answers.every((a) => a.trim() === "") ? (
+          <p className="text-gray-500 text-center italic">
+            Non hai ancora scritto nulla oggi 💭
+          </p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {questions.map(
+              (q, i) =>
+                answers[i].trim() !== "" && (
+                  <div
+                    key={i}
+                    className="border border-gray-200 rounded-xl p-4 bg-gray-50"
+                  >
+                    <p className="font-medium text-gray-700 mb-1 text-sm">{q.text}</p>
+                    <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">
+                      {answers[i]}
+                    </p>
+                  </div>
+                )
+            )}
+          </div>
         )}
       </div>
     </div>
   );
 }
+
+export default App;
