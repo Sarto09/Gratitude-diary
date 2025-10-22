@@ -2,7 +2,20 @@
   "name": "gratitude-diary",
   "version": "1.0.0",
   "private": true,
-<<<<<<< HEAD
+  "homepage": "https://sarto09.github.io/Gratitude-diary/",
+  "dependencies": {
+    "@headlessui/react": "^1.7.17",
+    "@heroicons/react": "^2.0.18",
+    "autoprefixer": "^10.4.16",
+    "html2pdf.js": "^0.10.1",
+    "lucide-react": "^0.344.0",
+    "postcss": "^8.4.31",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "^5.0.1",
+    "tailwindcss": "^3.3.3",
+    "web-vitals": "^2.1.4"
+  },
   "scripts": {
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
@@ -11,16 +24,11 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
-  "dependencies": {
-    "autoprefixer": "^10.4.14",
-    "gh-pages": "^6.3.0",
-    "html2pdf.js": "^0.10.1",
-    "lucide-react": "^0.314.0",
-    "postcss": "^8.4.21",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-scripts": "^5.0.1",
-    "tailwindcss": "^3.3.2"
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
   },
   "browserslist": {
     "production": [
@@ -33,25 +41,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-=======
-  "homepage": "https://Sarto09.github.io/gratitude-diary",
-  "scripts": {
-  "predeploy": "npm run build",
-  "deploy": "gh-pages -d build",
-  "start": "react-scripts start",
-  "build": "react-scripts build",
-  "test": "react-scripts test",
-  "eject": "react-scripts eject"
   },
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-scripts": "^5.0.1",
-    "lucide-react": "^0.314.0",
-    "tailwindcss": "^3.3.2",
-    "autoprefixer": "^10.4.14",
-    "postcss": "^8.4.21",
-    "html2pdf.js": "^0.10.1"
->>>>>>> 80a280b0845e9d36552f6e5849a0c38df2d56405
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
   }
 }
