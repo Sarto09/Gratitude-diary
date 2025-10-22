@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Custom styles can be added here. We keep the base typography
+  comfortable by increasing line-height and adding more generous
+  padding around elements. The warm colour palette defined in
+  tailwind.config.js is used throughout the components.
+*/
+
+body {
+  @apply font-sans text-gray-800;
+}
+
+textarea::placeholder {
+  /* Ensure placeholders are subtly coloured */
+  @apply text-gray-400;
+}
