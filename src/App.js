@@ -242,16 +242,23 @@ export default function App() {
             </h2>
           </div>
 
-          <textarea
-            value={answers[qIndex]}
-            onChange={(e) => {
-              const a = [...answers];
-              a[qIndex] = e.target.value;
-              setAnswers(a);
-            }}
-            placeholder={q.placeholder}
-            className="w-full h-32 p-3 border border-gray-300 rounded-xl text-gray-700 text-base resize-none shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
-          />
+        <textarea
+          key={qIndex} // forza focus corretto solo al cambio domanda
+          defaultValue={answers[qIndex]}
+          onInput={(e) => {
+            // aggiorna senza rimuovere focus
+            const a = [...answers];
+            a[qIndex] = e.target.value;
+            setAnswers(a);
+          }}
+          onFocus={(e) => {
+            // assicura che resti visibile su iOS
+            e.target.scrollIntoView({ behavior: "smooth", block: "center" });
+          }}
+          placeholder={q.placeholder}
+          className="w-full h-32 p-3 border border-gray-300 rounded-xl text-gray-700 text-base resize-none shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+        />
+
 
           <div className="flex items-center justify-between gap-3 mt-4">
             <button
