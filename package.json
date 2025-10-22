@@ -2,6 +2,7 @@
   "name": "gratitude-diary",
   "version": "1.0.0",
   "private": true,
+  "homepage": "https://Sarto09.github.io/gratitude-diary",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
