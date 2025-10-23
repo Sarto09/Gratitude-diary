@@ -105,8 +105,7 @@ export default function App() {
     touchStartX.current = null;
   };
 
-  /* ===== FIX tastiera mobile =====
-     ref dichiarato QUI (fuori da qualsiasi if) per rispettare le regole degli hook */
+  /* ===== FIX tastiera mobile ===== */
   const textRef = useRef(null);
 
   /* ===== Salvataggio del giorno ===== */
@@ -121,7 +120,48 @@ export default function App() {
     setSavedToday(true);
   };
 
-  /* ===== PDF (data grassetto, domande corsivo, risposte normali) ===== */
+  /* ===== PDF dell'intero diario ===== */
+  const exportAllPDF = () => {
+    const container = document.createElement("div");
+    container.style.padding = "18px";
+    container.style.fontFamily = "Inter, system-ui, -apple-system, sans-serif";
+    container.style.color = "#111827";
+    container.style.lineHeight = "1.5";
+
+    const title = document.createElement("div");
+    title.innerHTML = `<div style="font-weight:700;font-size:18px;margin-bottom:10px;">
+      Diario completo
+    </div>`;
+    container.appendChild(title);
+
+    const dates = Object.keys(diary).sort((a, b) => (a < b ? 1 : -1));
+    dates.forEach((d, idx) => {
+      const dayH = document.createElement("div");
+      dayH.innerHTML = `<div style="font-weight:700;margin-top:12px;">Giorno ${
+        dates.length - idx
+      } – ${formatIT(d)}</div>`;
+      container.appendChild(dayH);
+      diary[d].answers.forEach((ans, i) => {
+        const q = questions[i];
+        const block = document.createElement("div");
+        block.innerHTML = `
+          <div style="font-style:italic;margin:4px 0 0 0;">${q.text}</div>
+          <div style="white-space:pre-wrap;margin:0 0 6px 0;">${ans}</div>`;
+        container.appendChild(block);
+      });
+    });
+
+    const opt = {
+      margin: 10,
+      filename: "Diario_Completo.pdf",
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    };
+    html2pdf().from(container).set(opt).save();
+  };
+
+  /* ===== PDF del giorno corrente ===== */
   const exportPDF = () => {
     const container = document.createElement("div");
     container.style.padding = "18px";
@@ -138,12 +178,8 @@ export default function App() {
     questions.forEach((q, i) => {
       const block = document.createElement("div");
       block.innerHTML = `
-        <div style="font-style:italic;margin:8px 0 2px 0;">
-          ${q.text}
-        </div>
-        <div style="white-space:pre-wrap;margin:0 0 8px 0;">
-          ${answers[i] || ""}
-        </div>`;
+        <div style="font-style:italic;margin:8px 0 2px 0;">${q.text}</div>
+        <div style="white-space:pre-wrap;margin:0 0 8px 0;">${answers[i] || ""}</div>`;
       container.appendChild(block);
     });
 
@@ -166,6 +202,8 @@ export default function App() {
 
   /* ========== STEP: Data ========== */
   if (step === "date") {
+    const hasToday = Boolean(diary[selectedDate]);
+
     return (
       <Wrapper>
         <div className="text-center mb-8">
@@ -177,12 +215,13 @@ export default function App() {
           </p>
         </div>
 
-        {/* card bianca + input data grigio PERFETTAMENTE centrato */}
+        {/* card bianca + input data */}
         <div className="w-full flex justify-center">
           <div className="w-full max-w-sm bg-white rounded-2xl shadow-md p-6 flex flex-col items-center">
             <h2 className="text-lg font-semibold text-gray-700 mb-3 text-center">
               Seleziona la data del tuo diario
             </h2>
+
             <div className="w-full flex justify-center">
               <input
                 type="date"
@@ -202,12 +241,42 @@ export default function App() {
               Inizia
             </button>
 
-            {diary[selectedDate] && (
-              <p className="text-xs text-gray-500 mt-3 text-center">
-                Hai già risposte salvate per {formatIT(selectedDate)}. Puoi aggiornarle.
-              </p>
+            {hasToday && (
+              <div className="text-center mt-4 w-full">
+                <p className="text-xs text-gray-500 mb-2">
+                  Hai già risposte salvate per {formatIT(selectedDate)}.
+                </p>
+                <button
+                  onClick={() => setStep("review")}
+                  className="w-full bg-yellow-400 hover:bg-yellow-500 text-white font-medium py-2 rounded-lg transition"
+                >
+                  ✏️ Modifica le risposte di oggi
+                </button>
+              </div>
             )}
           </div>
+        </div>
+
+        {/* pulsanti sotto la card */}
+        <div className="flex flex-col sm:flex-row gap-3 mt-6 w-full max-w-sm mx-auto">
+          <button
+            onClick={() => setStep("history")}
+            className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg transition"
+          >
+            📖 Il mio diario completo
+          </button>
+          <button
+            onClick={exportAllPDF}
+            disabled={Object.keys(diary).length === 0}
+            className={
+              "flex-1 py-2 rounded-lg transition " +
+              (Object.keys(diary).length
+                ? "bg-blue-600 hover:bg-blue-700 text-white"
+                : "bg-blue-200 text-white cursor-not-allowed")
+            }
+          >
+            📄 Esporta tutto in PDF
+          </button>
         </div>
       </Wrapper>
     );
@@ -227,7 +296,7 @@ export default function App() {
         </div>
 
         <div
-          className="bg-white rounded-2xl shadow-md p-5"
+          className="bg-white rounded-2xl shadow-md p-5 overflow-y-auto max-h-[70vh]"
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
@@ -243,20 +312,20 @@ export default function App() {
             ref={textRef}
             defaultValue={answers[qIndex]}
             onInput={(e) => {
-              // aggiorna solo la variabile locale, non lo stato → niente re-render
+              // buffer locale: niente setState => niente re-render => la tastiera resta aperta
               answers[qIndex] = e.target.value;
             }}
             onBlur={(e) => {
-              // salva quando esci dal campo
-              const newAnswers = [...answers];
-              newAnswers[qIndex] = e.target.value;
-              setAnswers(newAnswers);
+              // salvo nello stato SOLO quando esci dal campo
+              const a = [...answers];
+              a[qIndex] = e.target.value;
+              setAnswers(a);
             }}
             onFocus={() => {
-              // su iPhone serve un piccolo ritardo per mantenere visibilità
+              // mantiene visibile il campo con tastiera aperta (iOS)
               setTimeout(() => {
                 textRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-                window.scrollBy(0, -60); // piccolo offset per evitare che la tastiera copra il campo
+                window.scrollBy(0, -60);
               }, 300);
             }}
             inputMode="text"
@@ -264,9 +333,9 @@ export default function App() {
             spellCheck="true"
             autoCapitalize="sentences"
             placeholder={q.placeholder}
-            className="w-full h-32 p-3 border border-gray-300 rounded-xl text-gray-700 text-base resize-none shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            className="w-full h-32 p-3 border border-gray-300 rounded-xl text-gray-700 text-base resize-none shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 touch-manipulation"
+            style={{ touchAction: "manipulation" }}
           />
-
 
           <div className="flex items-center justify-between gap-3 mt-4">
             <button
@@ -382,6 +451,7 @@ export default function App() {
       <Wrapper>
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold text-gray-800">Il mio diario</h2>
+          <p className="text-sm text-gray-500">Tutte le giornate registrate (dal più recente).</p>
         </div>
 
         {dates.length === 0 ? (
@@ -417,7 +487,7 @@ export default function App() {
                     }}
                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition"
                   >
-                    PDF
+                    PDF del giorno
                   </button>
                 </div>
               </div>
