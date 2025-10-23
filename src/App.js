@@ -239,28 +239,34 @@ export default function App() {
           </div>
 
           <textarea
-            key={qIndex}                 /* remount quando cambi domanda */
+            key={qIndex}
             ref={textRef}
-            defaultValue={answers[qIndex]} /* non controllata durante la scrittura */
-            onChange={(e) => {
-              // aggiorno il buffer locale senza re-render
+            defaultValue={answers[qIndex]}
+            onInput={(e) => {
+              // aggiorna solo la variabile locale, non lo stato → niente re-render
               answers[qIndex] = e.target.value;
             }}
             onBlur={(e) => {
-              // salvo nello stato SOLO quando esci dal campo → niente chiusura tastiera
-              const a = [...answers];
-              a[qIndex] = e.target.value;
-              setAnswers(a);
+              // salva quando esci dal campo
+              const newAnswers = [...answers];
+              newAnswers[qIndex] = e.target.value;
+              setAnswers(newAnswers);
             }}
             onFocus={() => {
-              // mantiene visibile il campo con tastiera aperta
+              // su iPhone serve un piccolo ritardo per mantenere visibilità
               setTimeout(() => {
                 textRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-              }, 150);
+                window.scrollBy(0, -60); // piccolo offset per evitare che la tastiera copra il campo
+              }, 300);
             }}
+            inputMode="text"
+            autoCorrect="on"
+            spellCheck="true"
+            autoCapitalize="sentences"
             placeholder={q.placeholder}
             className="w-full h-32 p-3 border border-gray-300 rounded-xl text-gray-700 text-base resize-none shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
           />
+
 
           <div className="flex items-center justify-between gap-3 mt-4">
             <button
