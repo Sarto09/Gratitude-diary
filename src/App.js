@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import html2pdf from "html2pdf.js";
 
-// ====== Utility date ======
+/* ===== Utilità data ===== */
 function todayISO() {
   const d = new Date();
   const off = d.getTimezoneOffset();
@@ -21,7 +21,7 @@ function formatIT(iso) {
 const STORAGE_KEY = "gratitudeDiaryV1";
 
 export default function App() {
-  // ====== Stato principale ======
+  /* ===== Stato principale ===== */
   const [step, setStep] = useState("date"); // 'date' | 'questions' | 'review' | 'history'
   const [selectedDate, setSelectedDate] = useState(todayISO());
   const questions = useMemo(
@@ -30,7 +30,7 @@ export default function App() {
         id: 1,
         icon: "❤️",
         text:
-          "Ripensando alla giornata di oggi, elenca le cose per cui sei grato.",
+          "Ripensando alla giornata di oggi, elenca le cose per cui essere grato.",
         placeholder: "Scrivi qui le cose di cui sei grato...",
       },
       {
@@ -50,8 +50,7 @@ export default function App() {
       {
         id: 4,
         icon: "🏅",
-        text:
-          "Quali sono le cose di cui sei orgoglioso oggi?",
+        text: "Quali sono le cose di cui sei orgoglioso oggi?",
         placeholder: "Scrivi qui i tuoi successi o traguardi...",
       },
     ],
@@ -64,7 +63,7 @@ export default function App() {
   // storico: { [dateISO]: { answers: string[], savedAt:number } }
   const [diary, setDiary] = useState({});
 
-  // ====== Carica/salva archivio ======
+  /* ===== Carica/salva archivio ===== */
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -75,15 +74,16 @@ export default function App() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(diary));
   }, [diary]);
 
-  // quando cambio data: carico eventuali risposte esistenti per quella data (draft/salvate)
+  // quando cambio data carico eventuali risposte salvate
   useEffect(() => {
     const existing = diary[selectedDate]?.answers ?? Array(4).fill("");
     setAnswers(existing);
     setSavedToday(Boolean(diary[selectedDate]));
   }, [selectedDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ====== Navigazione domande ======
-  const canNext = answers[qIndex].trim().length > 0;
+  /* ===== Navigazione domande ===== */
+  const canNext = (answers[qIndex] ?? "").trim().length > 0;
+
   const goNext = () => {
     if (!canNext) return;
     if (qIndex < questions.length - 1) setQIndex((i) => i + 1);
@@ -94,22 +94,22 @@ export default function App() {
     else setStep("date");
   };
 
-  // Swipe per “scorri alla successiva”
+  // Swipe mobile: sinistra = avanti (se compilato), destra = indietro
   const touchStartX = useRef(null);
-  const onTouchStart = (e) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
+  const onTouchStart = (e) => (touchStartX.current = e.touches[0].clientX);
   const onTouchEnd = (e) => {
     if (touchStartX.current == null) return;
     const dx = e.changedTouches[0].clientX - touchStartX.current;
-    // swipe a sinistra per andare avanti (se compilato)
     if (dx < -50 && canNext) goNext();
-    // swipe a destra per tornare indietro
     if (dx > 50) goPrev();
     touchStartX.current = null;
   };
 
-  // ====== Salvataggio risposte del giorno ======
+  /* ===== FIX tastiera mobile =====
+     ref dichiarato QUI (fuori da qualsiasi if) per rispettare le regole degli hook */
+  const textRef = useRef(null);
+
+  /* ===== Salvataggio del giorno ===== */
   const registerToday = () => {
     const clean = answers.map((a) => a.trim());
     const any = clean.some((a) => a.length > 0);
@@ -121,32 +121,30 @@ export default function App() {
     setSavedToday(true);
   };
 
-  // ====== PDF ======
-  const pdfRef = useRef(null);
+  /* ===== PDF (data grassetto, domande corsivo, risposte normali) ===== */
   const exportPDF = () => {
-    // generiamo un DOM minimale con stile tipografico elegante
     const container = document.createElement("div");
     container.style.padding = "18px";
     container.style.fontFamily = "Inter, system-ui, -apple-system, sans-serif";
     container.style.color = "#111827";
     container.style.lineHeight = "1.5";
 
-    const h = document.createElement("div");
-    h.innerHTML = `<div style="font-weight:700;font-size:18px;margin-bottom:10px;">
+    const title = document.createElement("div");
+    title.innerHTML = `<div style="font-weight:700;font-size:18px;margin-bottom:10px;">
       Diario – <span>${formatIT(selectedDate)}</span>
     </div>`;
-    container.appendChild(h);
+    container.appendChild(title);
 
     questions.forEach((q, i) => {
-      const qEl = document.createElement("div");
-      qEl.innerHTML = `
+      const block = document.createElement("div");
+      block.innerHTML = `
         <div style="font-style:italic;margin:8px 0 2px 0;">
           ${q.text}
         </div>
         <div style="white-space:pre-wrap;margin:0 0 8px 0;">
           ${answers[i] || ""}
         </div>`;
-      container.appendChild(qEl);
+      container.appendChild(block);
     });
 
     const opt = {
@@ -156,18 +154,17 @@ export default function App() {
       html2canvas: { scale: 2 },
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
     };
-
     html2pdf().from(container).set(opt).save();
   };
 
-  // ====== UI ======
+  /* ===== Wrapper layout caldo/centrato ===== */
   const Wrapper = ({ children }) => (
     <div className="min-h-screen bg-gradient-to-b from-yellow-50 to-yellow-100 flex flex-col items-center px-4 py-8">
       <div className="w-full max-w-md">{children}</div>
     </div>
   );
 
-  // ——— STEP: Data ———
+  /* ========== STEP: Data ========== */
   if (step === "date") {
     return (
       <Wrapper>
@@ -176,11 +173,11 @@ export default function App() {
             Diario della Gratitudine 🌞
           </h1>
           <p className="text-gray-600 text-base">
-            Imposta la data e inizia. Potrai rispondere a una domanda per volta.
+            Imposta la data e inizia. Una domanda alla volta, con riepilogo finale.
           </p>
         </div>
 
-        {/* card bianca con riquadro data grigio PERFETTAMENTE centrato */}
+        {/* card bianca + input data grigio PERFETTAMENTE centrato */}
         <div className="w-full flex justify-center">
           <div className="w-full max-w-sm bg-white rounded-2xl shadow-md p-6 flex flex-col items-center">
             <h2 className="text-lg font-semibold text-gray-700 mb-3 text-center">
@@ -207,8 +204,7 @@ export default function App() {
 
             {diary[selectedDate] && (
               <p className="text-xs text-gray-500 mt-3 text-center">
-                Hai già risposte salvate per {formatIT(selectedDate)}. Puoi
-                aggiornarle.
+                Hai già risposte salvate per {formatIT(selectedDate)}. Puoi aggiornarle.
               </p>
             )}
           </div>
@@ -217,15 +213,15 @@ export default function App() {
     );
   }
 
-  // ——— STEP: Domande (una per volta) ———
+  /* ========== STEP: Domande (una alla volta) ========== */
   if (step === "questions") {
     const q = questions[qIndex];
+
     return (
       <Wrapper>
         <div className="text-center mb-3">
           <p className="text-sm text-gray-500 italic">
-            Scorri a sinistra o premi “Avanti” per passare alla domanda
-            successiva
+            Scorri a sinistra o premi “Avanti” per passare alla domanda successiva
           </p>
           <p className="text-xs text-gray-500">{formatIT(selectedDate)}</p>
         </div>
@@ -242,23 +238,29 @@ export default function App() {
             </h2>
           </div>
 
-        <textarea
-          key={qIndex} // forza focus corretto solo al cambio domanda
-          defaultValue={answers[qIndex]}
-          onInput={(e) => {
-            // aggiorna senza rimuovere focus
-            const a = [...answers];
-            a[qIndex] = e.target.value;
-            setAnswers(a);
-          }}
-          onFocus={(e) => {
-            // assicura che resti visibile su iOS
-            e.target.scrollIntoView({ behavior: "smooth", block: "center" });
-          }}
-          placeholder={q.placeholder}
-          className="w-full h-32 p-3 border border-gray-300 rounded-xl text-gray-700 text-base resize-none shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
-        />
-
+          <textarea
+            key={qIndex}                 /* remount quando cambi domanda */
+            ref={textRef}
+            defaultValue={answers[qIndex]} /* non controllata durante la scrittura */
+            onChange={(e) => {
+              // aggiorno il buffer locale senza re-render
+              answers[qIndex] = e.target.value;
+            }}
+            onBlur={(e) => {
+              // salvo nello stato SOLO quando esci dal campo → niente chiusura tastiera
+              const a = [...answers];
+              a[qIndex] = e.target.value;
+              setAnswers(a);
+            }}
+            onFocus={() => {
+              // mantiene visibile il campo con tastiera aperta
+              setTimeout(() => {
+                textRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+              }, 150);
+            }}
+            placeholder={q.placeholder}
+            className="w-full h-32 p-3 border border-gray-300 rounded-xl text-gray-700 text-base resize-none shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+          />
 
           <div className="flex items-center justify-between gap-3 mt-4">
             <button
@@ -289,9 +291,10 @@ export default function App() {
     );
   }
 
-  // ——— STEP: Riepilogo (modificabile prima del salvataggio) ———
+  /* ========== STEP: Riepilogo (modificabile) ========== */
   if (step === "review") {
     const allFilled = answers.every((a) => a.trim().length > 0);
+
     return (
       <Wrapper>
         <div className="text-center mb-6">
@@ -299,7 +302,7 @@ export default function App() {
             Riepilogo – {formatIT(selectedDate)}
           </h2>
           <p className="text-sm text-gray-500">
-            Puoi modificare qualsiasi risposta prima di registrarle.
+            Modifica liberamente prima di registrare.
           </p>
         </div>
 
@@ -308,8 +311,8 @@ export default function App() {
             <div key={q.id} className="bg-white rounded-2xl shadow-sm p-4 border border-gray-200">
               <p className="italic text-gray-700 mb-2">{q.text}</p>
               <textarea
-                value={answers[i]}
-                onChange={(e) => {
+                defaultValue={answers[i]}
+                onBlur={(e) => {
                   const a = [...answers];
                   a[i] = e.target.value;
                   setAnswers(a);
@@ -366,16 +369,13 @@ export default function App() {
     );
   }
 
-  // ——— STEP: Storico ———
+  /* ========== STEP: Storico ========== */
   if (step === "history") {
     const dates = Object.keys(diary).sort((a, b) => (a < b ? 1 : -1));
     return (
       <Wrapper>
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold text-gray-800">Il mio diario</h2>
-          <p className="text-sm text-gray-500">
-            Tutte le giornate registrate, in ordine dal più recente.
-          </p>
         </div>
 
         {dates.length === 0 ? (
